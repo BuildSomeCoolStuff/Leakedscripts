@@ -1,0 +1,573 @@
+local Players = game:GetService("Players")
+local HttpService = game:GetService("HttpService")
+local MarketplaceService = game:GetService("MarketplaceService")
+local StarterGui = game:GetService("StarterGui")
+local str = "{{API}}"
+local str2 = "{{KEY}}"
+
+if str:find("{{", 1, true) then
+	str = "https://senahub.xyz/api"
+end
+
+if str2:find("{{", 1, true) then
+	str2 = "sena_20VvixjHsd1OPPwgHYJAstpM"
+end
+
+local str3 = "{{LICENSE}}"
+
+if ("{{LICENSE}}"):find("{{", 1, true) then
+	str3 = ""
+end
+
+local placeId = game.PlaceId
+local tbl = { [107778070777162] = { Name = "Steal An Egg" } }
+
+local tbl2 = {
+	"sena_key.txt",
+	"Sena/sena_key.txt",
+	"SenaHUB/sena_key.txt",
+	"SenaKey.txt",
+	"senahub_key.txt",
+	"Sena_AutoSave.json",
+	"Sena/Sena_AutoSave.json",
+}
+
+local genv = getgenv and getgenv() or _G
+
+if genv.__SenaLoaderLast and os.clock() - genv.__SenaLoaderLast < 5 then
+	return
+end
+
+genv.__SenaLoaderLast = os.clock()
+
+local function fn(arg, arg2)
+	if getgenv then
+		getgenv()[arg] = arg2
+	end
+
+	if _G then
+		_G[arg] = arg2
+	end
+end
+
+local function fn2(arg, arg2, arg3)
+	pcall(function()
+		StarterGui:SetCore("SendNotification", { Title = arg, Text = arg2, Duration = arg3 or 7 })
+	end)
+
+	print("[Sena Loader] " .. tostring(arg2))
+end
+
+fn("SenaIsDonator", false)
+fn("SenaIsTrial", false)
+fn("SenaDonatorInfo", nil)
+fn("SenaDonator", nil)
+local localPlayer = Players.LocalPlayer
+
+while not localPlayer do
+	Players:GetPropertyChangedSignal("LocalPlayer"):Wait()
+	localPlayer = Players.LocalPlayer
+end
+
+local v = tbl[placeId]
+local name = v and v.Name
+
+if not name then
+	pcall(function()
+		local productInfo = MarketplaceService:GetProductInfo(placeId)
+
+		if productInfo and productInfo.Name then
+			name = productInfo.Name
+		end
+	end)
+end
+
+name = name or "PlaceId " .. tostring(placeId)
+
+local function fn3(arg)
+	local tbl3 = {}
+
+	for k, v2 in pairs(arg) do
+		tbl3[#tbl3 + 1] = k .. "=" .. HttpService:UrlEncode(tostring(v2))
+	end
+
+	return table.concat(tbl3, "&")
+end
+
+local function fn4()
+	local senaBeatToken = {}
+	genv.__SenaBeatToken = senaBeatToken
+
+	local function fn5(arg)
+		local str4 = string.format("%s/%s?uid=%d&key=%s&game=%s&place=%d&t=%d", str, arg, localPlayer.UserId, HttpService:UrlEncode(str2), HttpService:UrlEncode(name), placeId, os.time())
+
+		pcall(function()
+			game:HttpGet(str4, true)
+		end)
+	end
+
+	local function fn6()
+		fn5("exec")
+
+		while true do
+			task.wait(60)
+
+			if genv.__SenaBeatToken ~= senaBeatToken then
+				break
+			else
+				if not Players.LocalPlayer or not Players.LocalPlayer.Parent then
+					break
+				end
+				fn5("heartbeat")
+			end
+		end
+	end
+
+	task.spawn(fn6)
+end
+
+local function fn5()
+	task.spawn(function()
+		local CoreGui = game:GetService("CoreGui")
+		local flag = false
+
+		for i = 1, 40 do
+			task.wait(0.5)
+
+			if genv.ChloeX_Instance and not CoreGui:FindFirstChild("Chloeex") and type(getnilinstances) == "function" then
+				local v2 = nil
+				local v3 = nil
+
+				for _, v4 in ipairs(getnilinstances()) do
+					if v4:IsA("ScreenGui") then
+						if v4.Name == "Chloeex" and #v4:GetChildren() > 0 then
+							v2 = v4
+						end
+
+						if v4.Name == "ToggleUIButton" and #v4:GetChildren() > 0 then
+							v3 = v4
+						end
+					end
+				end
+
+				if v2 then
+					local function fn6()
+						v2.Parent = CoreGui
+					end
+
+					pcall(fn6)
+
+					if v3 then
+						local function fn7()
+							v3.Parent = CoreGui
+						end
+
+						pcall(fn7)
+					end
+
+					flag = true
+				end
+
+				continue
+			end
+
+			if flag and CoreGui:FindFirstChild("Chloeex") then
+				break
+			end
+		end
+	end)
+end
+
+local function fn6(arg, arg2)
+	local chunk, v2 = loadstring(arg)
+
+	if not chunk then
+		warn("[Sena Loader] " .. arg2 .. " compile error: " .. tostring(v2))
+		fn2("Sena", "Script error, report it in Discord.", 10)
+		return false
+	end
+
+	local ok, result = pcall(chunk)
+
+	if not ok then
+		warn("[Sena Loader] " .. arg2 .. " runtime error: " .. tostring(result))
+	end
+
+	return true
+end
+
+local function fn7(arg)
+	local ok = nil
+	local result = nil
+
+	for i = 1, 3 do
+		local function fn8()
+			return game:HttpGet(str .. "/key/free?" .. fn3(arg) .. "&t=" .. os.time(), true)
+		end
+
+		ok, result = pcall(fn8)
+		if ok and type(result) == "string" and #result > 0 then
+			break
+		end
+
+		if i < 3 then
+			task.wait(1)
+		end
+	end
+
+	if not ok or type(result) ~= "string" or result == "" then
+		fn2("Sena", "Could not download the script, try again.", 10)
+		return
+	end
+
+	if result:sub(1, 9) == "-- sena: " then
+		if result:find("no free script", 1, true) then
+			fn2("Sena", "Unsupported game (PlaceId " .. tostring(placeId) .. ")", 6)
+		else
+			fn2("Sena", result:sub(10, 120), 8)
+		end
+
+		return
+	end
+
+	fn5()
+	fn6(result, "free script")
+end
+
+local function fn8(arg)
+	fn2("Sena", arg, 10)
+end
+
+genv.SenaBackend = { Api = str, Key = str2, Game = name }
+fn4()
+str3 = str3 ~= "" and str3 or getgenv and (getgenv().SenaKey or getgenv().SenaDonatorKey)
+local senaKey
+
+if str3 then
+	senaKey = str3
+else
+	local v2 = _G
+
+	if v2 then
+		senaKey = _G.SenaKey or _G.SenaDonatorKey
+	else
+		senaKey = v2
+	end
+end
+
+if (type(senaKey) ~= "string" or senaKey:gsub("%s+", "") == "") and isfile and readfile then
+	senaKey = nil
+
+	for _, v2 in ipairs(tbl2) do
+		pcall(function()
+			if isfile(v2) then
+				local v3 = readfile(v2)
+
+				if v2:find("%.json$") then
+					local ok, result = pcall(HttpService.JSONDecode, HttpService, v3)
+
+					if ok and type(result) == "table" and result.donatorKey and #tostring(result.donatorKey) > 0 then
+						senaKey = tostring(result.donatorKey)
+					end
+				elseif v3 and v3:gsub("%s+", "") ~= "" then
+					senaKey = v3
+				end
+			end
+		end)
+
+		if senaKey and senaKey:gsub("%s+", "") ~= "" then
+			break
+		end
+	end
+end
+
+local clientId = nil
+
+pcall(function()
+	if type(gethwid) == "function" then
+		clientId = gethwid()
+	end
+end)
+
+if not clientId or clientId == "" then
+	local function fn9()
+		clientId = game:GetService("RbxAnalyticsService"):GetClientId()
+	end
+
+	pcall(fn9)
+end
+
+if not clientId or clientId == "" then
+	fn8("Could not read HWID, try another executor.")
+	return
+end
+
+local function fn9(arg)
+	if type(arg) ~= "string" then
+		return nil
+	end
+	local str4 = arg:gsub("%s+", ""):upper()
+	return str4 ~= "" and str4 or nil
+end
+
+local function fn10(arg)
+	return { key = str2, license = arg, hwid = clientId, uid = localPlayer.UserId, place = placeId, game = name }
+end
+
+local function fn11(arg)
+	local ok, result
+
+	while true do
+		local n = 1
+		local exitTo = nil
+
+		while true do
+			local function fn12()
+				return game:HttpGet(str .. "/key/check?" .. fn3(fn10(arg)) .. "&t=" .. os.time(), true)
+			end
+
+			ok, result = pcall(fn12)
+			if ok and result and #result > 0 then
+				exitTo = 1
+				break
+			end
+
+			if n < 3 then
+				task.wait(1)
+			end
+
+			if x_1 <= 0 then
+				if t_1 >= v_1 then
+					continue
+				end
+				break
+			end
+
+			exitTo = 2
+			break
+		end
+
+		if exitTo == 1 then
+			break
+		end
+
+		if exitTo == 2 then
+			if t_1 <= v_1 then
+				continue
+			end
+			break
+		end
+
+		break
+	end
+
+	if not ok then
+		warn("[Sena Loader] /key/check: " .. tostring(result))
+		return nil, "Key server unreachable.", true
+	end
+	type(result)
+	error("devirt: code that never ran, with a key only the run has (at 127:37)")
+end
+
+local function fn12(arg, arg2)
+	fn("SenaKey", arg)
+	fn("SenaDonatorKey", arg)
+
+	local function fn13()
+		if writefile then
+			writefile("sena_key.txt", arg)
+
+			if makefolder and isfolder then
+				if not isfolder("Sena") then
+					pcall(makefolder, "Sena")
+				end
+
+				pcall(writefile, "Sena/sena_key.txt", arg)
+			end
+		end
+	end
+
+	pcall(fn13)
+	local flag = arg2.is_trial == true or arg2.tier == "trial"
+	fn("SenaIsDonator", true)
+	fn("SenaIsTrial", flag)
+	fn("SenaDonatorInfo", arg2)
+
+	genv.SenaDonator = {
+		Api = str,
+		ApiKey = str2,
+		Key = arg,
+		Hwid = clientId,
+		Session = arg2.session,
+		DaysLeft = arg2.days_left,
+		Expires = arg2.expires,
+		HwidUsed = arg2.hwid_used,
+		HwidMax = arg2.hwid_max,
+		Game = name,
+	}
+
+	fn2("Sena Donator", "Welcome " .. tostring(arg2.name and arg2.name ~= "" and arg2.name or localPlayer.Name) .. ", " .. tostring(arg2.days_left) .. " days left.", 6)
+	if not arg2.has_script then
+		fn7(fn10(arg))
+		return
+	end
+
+	if type(arg2.session) ~= "string" or arg2.session == "" then
+		warn("[Sena Loader] server did not issue a session, loading the free build")
+		fn7(fn10(arg))
+		return
+	end
+
+	local function fn14()
+		local v2 = fn10(arg)
+		local ticket = arg2.ticket
+		v2.ticket = ticket or ""
+		return game:HttpGet(str .. "/key/script?" .. fn3(v2) .. "&t=" .. os.time(), true)
+	end
+
+	local ok, result = pcall(fn14)
+
+	if ok and type(result) == "string" and result:sub(1, 8) == "-- sena:" then
+		warn("[Sena Loader] " .. result:sub(4, 120) .. ", loading the free build")
+		ok = false
+	end
+
+	if not ok or type(result) ~= "string" or result == "" then
+		warn("[Sena Loader] could not download the donator script, loading the free build")
+		fn7(fn10(arg))
+		return
+	end
+
+	fn5()
+
+	if not fn6(result, "donator script") then
+		fn7(fn10(arg))
+	end
+end
+
+local function fn13()
+	pcall(function()
+		localPlayer:Kick("Sena: your key was suspended for suspicious activity. If this is a mistake, contact us at discord.gg/senahub")
+	end)
+end
+
+local function fn14(arg)
+	local function fn15()
+		return loadstring(game:HttpGet("https://senahub.xyz/raw/libsenuy2", true))()
+	end
+
+	local ok, result = pcall(fn15)
+
+	if not ok or type(result) ~= "table" then
+		warn("[Sena Loader] key UI lib failed: " .. tostring(result))
+		fn8("Could not load the key UI, try again.")
+		return
+	end
+
+	local function fn16()
+		result:Elevate()
+	end
+
+	pcall(fn16)
+
+	local v2 = result:Window({
+		Title = "Sena 6.1 |",
+		Footer = name,
+		Folder = "SenaKeyGate",
+		Version = 1,
+		Color = Color3.new(0.90980392694473267, 0.90980392694473267, 0.93333333730697632),
+		Image = "https://senahub.xyz/api/visual/sena_bg.jpg",
+		KeyGate = true,
+	})
+
+	v2:AddTab({ Name = "Donate", Icon = "donator", LayoutOrder = -1, Gate = false }):AddSection("Support Sena", true):AddSupportCard({})
+
+	if arg then
+		fn2("Sena", arg .. " Enter a valid key to continue.", 8)
+	end
+
+	local flag = false
+
+	local function fn17()
+		if flag or not result:IsDonator() then
+			return
+		end
+		flag = true
+		local v3 = nil
+
+		for i = 1, 50 do
+			v3 = fn9(result:GetSavedKey())
+			if v3 then
+				break
+			end
+			task.wait(0.1)
+		end
+
+		local v4 = nil
+		local v5 = nil
+
+		if v3 then
+			v4, v5 = fn11(v3)
+		end
+
+		if v5 == "suspended" then
+			fn13()
+			return
+		end
+
+		if not v4 then
+			flag = false
+			fn2("Sena", tostring(v5 or "Key not found, redeem again."), 8)
+			return
+		end
+
+		task.wait(1.5)
+
+		local function fn18()
+			v2:DestroyGui()
+		end
+
+		pcall(fn18)
+
+		pcall(function()
+			local CoreGui = game:GetService("CoreGui")
+
+			for _, v6 in ipairs({ "Chloeex", "ToggleUIButton", "AnnounceGui" }) do
+				local v7 = CoreGui:FindFirstChild(v6)
+
+				if v7 then
+					v7:Destroy()
+				end
+			end
+		end)
+
+		pcall(function()
+			genv.ChloeX_Instance = nil
+			genv.ChloeX_Running = nil
+			genv.ChloeX_ReopenPrompt = nil
+		end)
+
+		fn12(v3, v4)
+	end
+
+	table.insert(result.DonatorListeners, fn17)
+end
+
+senaKey = fn9(senaKey)
+
+if not senaKey then
+	fn14(nil)
+	return
+end
+
+local v2, v3, v4 = fn11(senaKey)
+
+if v3 == "suspended" then
+	fn13()
+elseif v2 then
+	fn12(senaKey, v2)
+elseif v4 then
+	fn8(v3 .. " Try again in a moment.")
+else
+	fn14(v3)
+end
